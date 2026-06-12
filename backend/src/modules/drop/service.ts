@@ -1,6 +1,6 @@
 import { prisma } from "../../shared/lib/prisma.js";
 import { AppError } from "../../shared/lib/errors.js";
-import type { CreateDropInput } from "./drop.schema.js";
+import type { CreateDropInput } from "./schema.js";
 import type { Server as SocketIOServer } from "socket.io";
 
 export const getAll = async () => {

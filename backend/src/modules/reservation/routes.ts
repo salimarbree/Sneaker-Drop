@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { asyncWrapper } from "../../shared/middlewares/asyncWrapper.js";
-import { reservationController } from "./reservation.controller.js";
+import { reservationController } from "./controller.js";
 
 const router = Router();
 

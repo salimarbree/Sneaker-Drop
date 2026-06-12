@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import type { RequestWithUser } from "../../shared/types/index.js";
-import * as userService from "./user.service.js";
+import * as userService from "./service.js";
 import { zodSafeParse } from "../../shared/lib/zodSafeParse.js";
-import { registerSchema, loginSchema, updateProfileSchema } from "./user.schema.js";
+import { registerSchema, loginSchema, updateProfileSchema } from "./schema.js";
 
 const getAll = async (_req: Request, res: Response) => {
   const users = await userService.getAll();
@@ -28,7 +28,10 @@ const login = async (req: Request, res: Response) => {
 
 const updateProfile = async (req: Request, res: Response) => {
   const parsed = zodSafeParse(req.body, updateProfileSchema);
-  const user = await userService.updateProfile((req as RequestWithUser).user.userId, parsed);
+  const user = await userService.updateProfile(
+    (req as RequestWithUser).user.userId,
+    parsed,
+  );
   res.json(user);
 };
 

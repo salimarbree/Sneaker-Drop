@@ -1,12 +1,15 @@
 import type { Request, Response } from "express";
 import type { RequestWithUser } from "../../shared/types/index.js";
-import * as reservationService from "./reservation.service.js";
+import * as reservationService from "./service.js";
 import { zodSafeParse } from "../../shared/lib/zodSafeParse.js";
-import { createReservationSchema } from "./reservation.schema.js";
+import { createReservationSchema } from "./schema.js";
 
 const create = async (req: Request, res: Response) => {
   const parsed = zodSafeParse(req.body, createReservationSchema);
-  const result = await reservationService.create(parsed, (req as RequestWithUser).io);
+  const result = await reservationService.create(
+    parsed,
+    (req as RequestWithUser).io,
+  );
   res.status(201).json(result);
 };
 

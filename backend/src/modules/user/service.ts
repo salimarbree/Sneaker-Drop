@@ -2,8 +2,12 @@ import { prisma } from "../../shared/lib/prisma.js";
 import { AppError } from "../../shared/lib/errors.js";
 import bcrypt from "bcrypt";
 import { signToken } from "../../shared/middlewares/auth.js";
-import { publicUserSelect } from "./user.schema.js";
-import type { RegisterInput, LoginInput, UpdateProfileInput } from "./user.schema.js";
+import { publicUserSelect } from "./schema.js";
+import type {
+  RegisterInput,
+  LoginInput,
+  UpdateProfileInput,
+} from "./schema.js";
 
 export const getAll = async () => {
   return prisma.user.findMany({
@@ -34,7 +38,7 @@ export const register = async (data: RegisterInput) => {
         ? "Email already in use"
         : "Username already taken",
       "DUPLICATE",
-      409
+      409,
     );
   }
 
@@ -75,7 +79,10 @@ export const login = async (data: LoginInput) => {
   return { user: publicUser, token };
 };
 
-export const updateProfile = async (userId: string, data: UpdateProfileInput) => {
+export const updateProfile = async (
+  userId: string,
+  data: UpdateProfileInput,
+) => {
   if (data.email) {
     const existing = await prisma.user.findFirst({
       where: { email: data.email, id: { not: userId } },
@@ -87,13 +94,15 @@ export const updateProfile = async (userId: string, data: UpdateProfileInput) =>
     const existing = await prisma.user.findFirst({
       where: { username: data.username, id: { not: userId } },
     });
-    if (existing) throw new AppError("Username already taken", "DUPLICATE", 409);
+    if (existing)
+      throw new AppError("Username already taken", "DUPLICATE", 409);
   }
 
   const updateData: Record<string, string> = {};
   if (data.username) updateData.username = data.username;
   if (data.email) updateData.email = data.email;
-  if (data.password) updateData.passwordHash = await bcrypt.hash(data.password, 10);
+  if (data.password)
+    updateData.passwordHash = await bcrypt.hash(data.password, 10);
 
   const user = await prisma.user.update({
     where: { id: userId },

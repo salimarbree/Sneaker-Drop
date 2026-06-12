@@ -1,7 +1,7 @@
 import { prisma } from "../../shared/lib/prisma.js";
 import { AppError } from "../../shared/lib/errors.js";
 import type { Server as SocketIOServer } from "socket.io";
-import type { CreatePurchaseInput } from "./purchase.schema.js";
+import type { CreatePurchaseInput } from "./schema.js";
 
 export const create = async (data: CreatePurchaseInput, io: SocketIOServer) => {
   const { userId, dropId, reservationId } = data;
@@ -11,7 +11,11 @@ export const create = async (data: CreatePurchaseInput, io: SocketIOServer) => {
       where: { id: reservationId },
     });
 
-    if (!reservation || reservation.userId !== userId || reservation.dropId !== dropId) {
+    if (
+      !reservation ||
+      reservation.userId !== userId ||
+      reservation.dropId !== dropId
+    ) {
       throw new AppError("Invalid reservation", "INVALID_RESERVATION", 400);
     }
 

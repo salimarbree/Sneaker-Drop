@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { asyncWrapper } from "../../shared/middlewares/asyncWrapper.js";
-import { dropController } from "./drop.controller.js";
+import { dropController } from "./controller.js";
 
 const router = Router();
 

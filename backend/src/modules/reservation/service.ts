@@ -1,11 +1,14 @@
 import { prisma } from "../../shared/lib/prisma.js";
 import { AppError } from "../../shared/lib/errors.js";
 import type { Server as SocketIOServer } from "socket.io";
-import type { CreateReservationInput } from "./reservation.schema.js";
+import type { CreateReservationInput } from "./schema.js";
 
 const RESERVATION_TTL_MS = 60_000;
 
-export const create = async (data: CreateReservationInput, io: SocketIOServer) => {
+export const create = async (
+  data: CreateReservationInput,
+  io: SocketIOServer,
+) => {
   const { userId, dropId } = data;
 
   const result = await prisma.$transaction(async (tx) => {
@@ -32,7 +35,7 @@ export const create = async (data: CreateReservationInput, io: SocketIOServer) =
       throw new AppError(
         "You already have an active reservation for this drop",
         "ALREADY_RESERVED",
-        409
+        409,
       );
     }
 

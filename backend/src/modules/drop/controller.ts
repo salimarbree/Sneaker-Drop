@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import type { RequestWithUser } from "../../shared/types/index.js";
-import * as dropService from "./drop.service.js";
+import * as dropService from "./service.js";
 import { zodSafeParse } from "../../shared/lib/zodSafeParse.js";
-import { createDropSchema } from "./drop.schema.js";
+import { createDropSchema } from "./schema.js";
 
 const getAll = async (_req: Request, res: Response) => {
   const drops = await dropService.getAll();

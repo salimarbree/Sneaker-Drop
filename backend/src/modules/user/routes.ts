@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { asyncWrapper } from "../../shared/middlewares/asyncWrapper.js";
 import { authenticate } from "../../shared/middlewares/auth.js";
-import { userController } from "./user.controller.js";
+import { userController } from "./controller.js";
 
 const router = Router();
 
