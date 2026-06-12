@@ -10,7 +10,7 @@ export function useSocket() {
     if (!socket) {
       const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
       const socketUrl = import.meta.env.VITE_SOCKET_URL ?? apiBase.replace(/\/api$/, "");
-      socket = io(socketUrl || undefined, { transports: ["websocket"] });
+      socket = io(socketUrl || undefined);
       window.__socket = socket;
     }
 
