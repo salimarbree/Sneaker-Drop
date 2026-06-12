@@ -2,8 +2,12 @@ import type { PrismaClient } from "@prisma/client";
 import type { Server as SocketIOServer } from "socket.io";
 
 const RECOVERY_INTERVAL_MS = 5_000;
+//
 
-export function startStockRecovery(prisma: PrismaClient, io: SocketIOServer): void {
+export function startStockRecovery(
+  prisma: PrismaClient,
+  io: SocketIOServer,
+): void {
   async function recoverExpiredReservations(): Promise<void> {
     try {
       const expiredReservations = await prisma.reservation.findMany({
@@ -51,7 +55,9 @@ export function startStockRecovery(prisma: PrismaClient, io: SocketIOServer): vo
       }
 
       if (expiredReservations.length > 0) {
-        console.log(`Recovered ${expiredReservations.length} expired reservation(s)`);
+        console.log(
+          `Recovered ${expiredReservations.length} expired reservation(s)`,
+        );
       }
     } catch (err) {
       console.error("Stock recovery error:", err);
