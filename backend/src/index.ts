@@ -11,6 +11,7 @@ import userRoutes from "./modules/user/routes.js";
 import uploadRoutes from "./modules/upload/routes.js";
 import { errorHandler } from "./shared/middlewares/errorHandler.js";
 import { setupSocketHandlers } from "./shared/socket/index.js";
+import { startStockRecovery } from "./services/stockRecovery.service.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -41,11 +42,8 @@ setupSocketHandlers(io, prisma);
 
 export default app;
 
-const isVercel = process.env.VERCEL === "1";
-if (!isVercel) {
-  const { startStockRecovery } = await import("./services/stockRecovery.service.js");
+if (!process.env.VERCEL) {
   startStockRecovery(prisma, io);
-
   const PORT = process.env.PORT || 3001;
   httpServer.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
