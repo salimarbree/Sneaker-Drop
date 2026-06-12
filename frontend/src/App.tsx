@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, Link, useNavigate } from "react-router-dom";
+import { Routes, Route, Link } from "react-router-dom";
 import { api } from "./api";
 import { useSocket } from "./hooks/useSocket";
 import { useAuth } from "./context/AuthContext";
@@ -7,7 +7,7 @@ import DropCard from "./components/DropCard";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ProfilePage from "./pages/ProfilePage";
-import type { Drop, User, StockUpdateEvent, PurchaseEvent } from "./types";
+import type { Drop, StockUpdateEvent, PurchaseEvent } from "./types";
 
 function ConnectionBadge({ connected }: { connected: boolean }) {
   return (
@@ -26,21 +26,13 @@ function ConnectionBadge({ connected }: { connected: boolean }) {
 
 function HomePage() {
   const [drops, setDrops] = useState<Drop[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { connected, on } = useSocket();
   const { user } = useAuth();
 
   useEffect(() => {
-    Promise.all([api.getDrops(), api.getUsers()])
-      .then(([dropsData, usersData]) => {
-        setDrops(dropsData);
-        setUsers(usersData);
-        if (usersData.length > 0 && !selectedUser) {
-          setSelectedUser(usersData[0]);
-        }
-      })
+    api.getDrops()
+      .then(setDrops)
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -136,7 +128,7 @@ function HomePage() {
               <DropCard
                 key={drop.id}
                 drop={drop}
-                userId={selectedUser?.id}
+                userId={user?.id}
                 onStockUpdate={handleStockUpdate}
               />
             ))}
