@@ -8,7 +8,10 @@ export function useSocket() {
 
   useEffect(() => {
     if (!socket) {
-      socket = io({ path: "/_/backend/socket.io", transports: ["websocket"] });
+      const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
+      const socketUrl = import.meta.env.VITE_SOCKET_URL ?? apiBase.replace(/\/api$/, "");
+      socket = io(socketUrl || undefined, { transports: ["websocket"] });
+      window.__socket = socket;
     }
 
     socket.on("connect", () => setConnected(true));
