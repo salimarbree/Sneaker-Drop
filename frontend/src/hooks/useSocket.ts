@@ -8,7 +8,7 @@ export function useSocket() {
 
   useEffect(() => {
     if (!socket) {
-      socket = io({ path: "/_/backend/socket.io", transports: ["websocket", "polling"] });
+      socket = io({ path: "/_/backend/socket.io", transports: ["websocket"] });
     }
 
     socket.on("connect", () => setConnected(true));
