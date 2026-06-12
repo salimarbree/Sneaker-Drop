@@ -1,6 +1,6 @@
 import type { Drop, User, AuthResponse, ReservationResponse, PurchaseResponse } from "../types";
 
-const BASE = "/api";
+const BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 class ApiError extends Error {
   constructor(message: string) {
