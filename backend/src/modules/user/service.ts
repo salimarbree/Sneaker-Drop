@@ -53,7 +53,7 @@ export const register = async (data: RegisterInput) => {
     select: publicUserSelect,
   });
 
-  const token = signToken({ userId: user.id, username: user.username });
+  const token = signToken({ userId: user.id, username: user.username, role: user.role });
 
   return { user, token };
 };
@@ -72,7 +72,7 @@ export const login = async (data: LoginInput) => {
     throw new AppError("Invalid email or password", "INVALID_CREDENTIALS", 400);
   }
 
-  const token = signToken({ userId: user.id, username: user.username });
+  const token = signToken({ userId: user.id, username: user.username, role: user.role });
 
   const { passwordHash: _, ...publicUser } = user;
 

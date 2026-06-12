@@ -7,7 +7,13 @@ const prisma = new PrismaClient();
 async function main() {
   const hash = await bcrypt.hash("password123", 10);
 
+  await prisma.purchase.deleteMany();
+  await prisma.reservation.deleteMany();
+  await prisma.drop.deleteMany();
+  await prisma.user.deleteMany();
+
   const users = await Promise.all([
+    prisma.user.create({ data: { username: "admin", email: "admin@example.com", passwordHash: hash, role: "admin" } }),
     prisma.user.create({ data: { username: "sneakerhead42", email: "sneakerhead42@example.com", passwordHash: hash } }),
     prisma.user.create({ data: { username: "dropsniper", email: "dropsniper@example.com", passwordHash: hash } }),
     prisma.user.create({ data: { username: "heatseeker", email: "heatseeker@example.com", passwordHash: hash } }),

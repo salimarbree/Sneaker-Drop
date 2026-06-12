@@ -67,7 +67,15 @@ export const api = {
     name: string;
     totalStock: number;
     description?: string;
+    imageUrl?: string;
   }) => request<Drop>("POST", "/drops", body),
+  updateDrop: (id: string, body: {
+    name?: string;
+    description?: string;
+    imageUrl?: string;
+    totalStock?: number;
+  }) => request<Drop>("PUT", `/drops/${id}`, body),
+  deleteDrop: (id: string) => request<{ ok: boolean }>("DELETE", `/drops/${id}`),
   reserve: (userId: string, dropId: string) =>
     request<ReservationResponse>("POST", "/reservations", { userId, dropId }),
   purchase: (userId: string, dropId: string, reservationId: string) =>

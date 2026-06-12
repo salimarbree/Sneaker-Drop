@@ -7,6 +7,7 @@ import DropCard from "./components/DropCard";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ProfilePage from "./pages/ProfilePage";
+import AdminPage from "./pages/AdminPage";
 import type { Drop, StockUpdateEvent, PurchaseEvent } from "./types";
 
 function ConnectionBadge({ connected }: { connected: boolean }) {
@@ -188,6 +189,14 @@ export default function App() {
             <div className="flex items-center gap-4">
               {user ? (
                 <>
+                  {user.role === "admin" && (
+                    <Link
+                      to="/admin"
+                      className="text-sm text-gray-600 hover:text-gray-900 font-medium"
+                    >
+                      Admin
+                    </Link>
+                  )}
                   <Link
                     to="/profile"
                     className="text-sm text-gray-600 hover:text-gray-900 font-medium"
@@ -219,6 +228,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/admin" element={<AdminPage />} />
       </Routes>
 
       {/* Footer */}

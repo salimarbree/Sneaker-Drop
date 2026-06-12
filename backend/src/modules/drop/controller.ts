@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import type { RequestWithUser } from "../../shared/types/index.js";
 import * as dropService from "./service.js";
 import { zodSafeParse } from "../../shared/lib/zodSafeParse.js";
-import { createDropSchema } from "./schema.js";
+import { createDropSchema, updateDropSchema } from "./schema.js";
 
 const getAll = async (_req: Request, res: Response) => {
   const drops = await dropService.getAll();
@@ -21,4 +21,17 @@ const create = async (req: Request, res: Response) => {
   res.status(201).json(drop);
 };
 
-export const dropController = { getAll, getById, create };
+const update = async (req: Request, res: Response) => {
+  const id = req.params.id as string;
+  const parsed = zodSafeParse(req.body, updateDropSchema);
+  const drop = await dropService.update(id, parsed, (req as RequestWithUser).io);
+  res.json(drop);
+};
+
+const remove = async (req: Request, res: Response) => {
+  const id = req.params.id as string;
+  await dropService.remove(id, (req as RequestWithUser).io);
+  res.json({ ok: true });
+};
+
+export const dropController = { getAll, getById, create, update, remove };

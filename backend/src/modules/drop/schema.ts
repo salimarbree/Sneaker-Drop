@@ -9,4 +9,14 @@ export const createDropSchema = z.object({
   endTime: z.string().datetime().optional().nullable(),
 });
 
+export const updateDropSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  description: z.string().max(1000).optional(),
+  imageUrl: z.string().url().optional().or(z.literal("")),
+  totalStock: z.number().int().positive().optional(),
+  startTime: z.string().datetime().optional(),
+  endTime: z.string().datetime().optional().nullable(),
+});
+
 export type CreateDropInput = z.infer<typeof createDropSchema>;
+export type UpdateDropInput = z.infer<typeof updateDropSchema>;
