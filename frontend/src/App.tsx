@@ -25,27 +25,78 @@ function ConnectionBadge({ connected }: { connected: boolean }) {
   );
 }
 
+function Pagination({ 
+  page, 
+  totalPages, 
+  onPageChange 
+}: { 
+  page: number; 
+  totalPages: number; 
+  onPageChange: (p: number) => void 
+}) {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex items-center justify-center gap-2 mt-8">
+      <button
+        disabled={page <= 1}
+        onClick={() => onPageChange(page - 1)}
+        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        Previous
+      </button>
+      <div className="flex items-center gap-1">
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+          <button
+            key={p}
+            onClick={() => onPageChange(p)}
+            className={`w-10 h-10 text-sm font-medium rounded-lg transition-all ${
+              p === page
+                ? "bg-gray-900 text-white shadow-sm"
+                : "text-gray-500 hover:bg-gray-100"
+            }`}
+          >
+            {p}
+          </button>
+        ))}
+      </div>
+      <button
+        disabled={page >= totalPages}
+        onClick={() => onPageChange(page + 1)}
+        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        Next
+      </button>
+    </div>
+  );
+}
+
 function HomePage() {
   const [drops, setDrops] = useState<Drop[]>([]);
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [loading, setLoading] = useState(true);
-  const { connected, on } = useSocket();
+  const { on } = useSocket();
   const { user } = useAuth();
 
-  const fetchDrops = useCallback(async () => {
+  const fetchDrops = useCallback(async (page = 1) => {
     try {
-      const data = await api.getDrops();
-      setDrops(data);
+      const res = await api.getDrops(page, 6);
+      setDrops(res.data);
+      setPagination({
+        page: res.pagination.page,
+        totalPages: res.pagination.totalPages,
+        total: res.pagination.total,
+      });
     } catch {
       // silent
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    api.getDrops()
-      .then(setDrops)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+    fetchDrops(1);
+  }, [fetchDrops]);
 
   useEffect(() => {
     const unsubStock = on<StockUpdateEvent>("stock:updated", (data) => {
@@ -69,11 +120,11 @@ function HomePage() {
       );
     });
 
-    const unsubDrop = on<Drop>("drop:created", (data) => {
-      setDrops((prev) => [data, ...prev]);
+    const unsubDrop = on<Drop>("drop:created", () => {
+      fetchDrops(pagination.page);
     });
 
-    const pollTimer = setInterval(fetchDrops, 3000);
+    const pollTimer = setInterval(() => fetchDrops(pagination.page), 5000);
 
     return () => {
       unsubStock();
@@ -81,12 +132,9 @@ function HomePage() {
       unsubDrop();
       clearInterval(pollTimer);
     };
-  }, [on, fetchDrops]);
+  }, [on, fetchDrops, pagination.page]);
 
   const handleStockUpdate = (_dropId: string, _stock: number) => {};
-
-  const totalAvailable = drops.reduce((s, d) => s + d.availableStock, 0);
-  const totalSold = drops.reduce((s, d) => s + (d.totalStock - d.availableStock), 0);
 
   if (loading) {
     return (
@@ -101,42 +149,45 @@ function HomePage() {
   }
 
   return (
-    <>
-      {/* Stats bar */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-2">
-        <div className="flex items-center gap-6 text-sm">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      {/* Hero section */}
+      <div className="mb-10 text-center sm:text-left flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+        <div>
+          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+            Latest Drops
+          </h2>
+          <p className="text-gray-500 mt-2 max-w-lg">
+            High-demand sneaker releases with real-time inventory tracking. 
+            Reserve yours before they are gone.
+          </p>
+        </div>
+        <div className="flex items-center gap-4 text-sm bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
           <div>
-            <span className="text-gray-400">Active drops</span>
-            <span className="ml-2 font-bold text-gray-900 tabular-nums">{drops.length}</span>
+            <span className="text-gray-400 block text-[10px] uppercase font-bold tracking-wider">Total Drops</span>
+            <span className="font-bold text-gray-900 tabular-nums">{pagination.total}</span>
           </div>
+          <div className="w-px h-8 bg-gray-100" />
           <div>
-            <span className="text-gray-400">Available</span>
-            <span className="ml-2 font-bold text-emerald-600 tabular-nums">{totalAvailable}</span>
-          </div>
-          <div>
-            <span className="text-gray-400">Sold</span>
-            <span className="ml-2 font-bold text-gray-900 tabular-nums">{totalSold}</span>
+            <span className="text-gray-400 block text-[10px] uppercase font-bold tracking-wider">Status</span>
+            <ConnectionBadge connected={window.__socket?.connected ?? false} />
           </div>
         </div>
       </div>
 
-      {/* Main */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
-        {drops.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="text-5xl mb-4 opacity-30">📦</div>
-            <h3 className="text-lg font-semibold text-gray-400 mb-1">
-              No drops available
-            </h3>
-            <p className="text-sm text-gray-300">
-              Create a drop via{" "}
-              <code className="text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono">
-                POST /api/drops
-              </code>
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Main Grid */}
+      {drops.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
+          <div className="text-5xl mb-4 opacity-30">📦</div>
+          <h3 className="text-lg font-semibold text-gray-400 mb-1">
+            No drops available
+          </h3>
+          <p className="text-sm text-gray-300">
+            Check back later for new releases
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {drops.map((drop) => (
               <DropCard
                 key={drop.id}
@@ -146,9 +197,15 @@ function HomePage() {
               />
             ))}
           </div>
-        )}
-      </main>
-    </>
+
+          <Pagination 
+            page={pagination.page} 
+            totalPages={pagination.totalPages} 
+            onPageChange={fetchDrops} 
+          />
+        </>
+      )}
+    </div>
   );
 }
 
@@ -167,53 +224,64 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#FDFDFD]">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center text-sm select-none">
+            <Link to="/" className="flex items-center gap-3 group">
+              <div className="w-9 h-9 bg-gray-900 rounded-xl flex items-center justify-center text-lg select-none group-hover:scale-105 transition-transform">
                 👟
               </div>
               <div>
-                <h1 className="text-base font-bold text-gray-900 leading-tight">
+                <h1 className="text-base font-black text-gray-900 leading-tight uppercase tracking-tight">
                   Sneaker Drop
                 </h1>
-                <p className="text-[11px] text-gray-400 leading-tight">
+                <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-widest leading-tight">
                   Real-time inventory
                 </p>
               </div>
             </Link>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               {user ? (
-                <>
-                  {user.role === "admin" && (
+                <div className="flex items-center gap-4">
+                  <div className="hidden sm:flex items-center gap-4 mr-2">
+                    {user.role === "admin" && (
+                      <Link
+                        to="/admin"
+                        className="text-xs font-bold text-gray-400 hover:text-gray-900 uppercase tracking-wider transition-colors"
+                      >
+                        Dashboard
+                      </Link>
+                    )}
                     <Link
-                      to="/admin"
-                      className="text-sm text-gray-600 hover:text-gray-900 font-medium"
+                      to="/profile"
+                      className="text-xs font-bold text-gray-400 hover:text-gray-900 uppercase tracking-wider transition-colors"
                     >
-                      Admin
+                      Profile
                     </Link>
-                  )}
-                  <Link
-                    to="/profile"
-                    className="text-sm text-gray-600 hover:text-gray-900 font-medium"
-                  >
-                    @{user.username}
-                  </Link>
-                  <button
-                    onClick={logout}
-                    className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    Sign out
-                  </button>
-                </>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 pl-4 border-l border-gray-100">
+                    <div className="text-right hidden sm:block">
+                      <p className="text-xs font-bold text-gray-900 leading-none mb-0.5">@{user.username}</p>
+                      <button 
+                        onClick={logout}
+                        className="text-[10px] font-bold text-red-500 hover:text-red-600 uppercase tracking-tight cursor-pointer"
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-100 flex items-center justify-center text-xs font-bold text-gray-500">
+                      {user.username[0].toUpperCase()}
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <Link
                   to="/login"
-                  className="text-sm text-gray-900 font-semibold hover:underline"
+                  className="px-5 py-2 bg-gray-900 text-white text-xs font-bold uppercase tracking-widest rounded-full hover:bg-gray-800 transition-all shadow-sm active:scale-95"
                 >
                   Sign in
                 </Link>
@@ -232,10 +300,16 @@ export default function App() {
       </Routes>
 
       {/* Footer */}
-      <footer className="max-w-6xl mx-auto px-4 sm:px-6 py-6 border-t border-gray-100 mt-8">
-        <p className="text-xs text-gray-300 text-center">
-          Sneaker Drop &middot; Real-Time Inventory System
-        </p>
+      <footer className="max-w-6xl mx-auto px-4 sm:px-6 py-12 border-t border-gray-50 mt-16">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-3 grayscale opacity-50">
+             <div className="w-6 h-6 bg-gray-900 rounded-lg flex items-center justify-center text-xs">👟</div>
+             <span className="text-sm font-black uppercase tracking-tighter">Sneaker Drop</span>
+          </div>
+          <p className="text-xs text-gray-400 font-medium">
+            &copy; 2026 Sneaker Drop System &middot; Built for high-velocity inventory management
+          </p>
+        </div>
       </footer>
     </div>
   );

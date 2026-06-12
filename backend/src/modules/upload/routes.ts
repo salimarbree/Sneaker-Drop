@@ -2,10 +2,17 @@ import { Router } from "express";
 import multer from "multer";
 import path from "path";
 import crypto from "crypto";
+import fs from "fs";
 import { requireAdmin } from "../../shared/middlewares/auth.js";
 
+const UPLOADS_DIR = process.env.VERCEL ? "/tmp/uploads" : "uploads";
+
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
 const storage = multer.diskStorage({
-  destination: "uploads/",
+  destination: UPLOADS_DIR,
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname);
     cb(null, `${crypto.randomUUID()}${ext}`);

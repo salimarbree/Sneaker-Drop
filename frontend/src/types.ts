@@ -25,6 +25,16 @@ export interface Drop {
   purchases: PurchaseBrief[];
 }
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 export interface PurchaseBrief {
   user: { username: string };
   createdAt: string;

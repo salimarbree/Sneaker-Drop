@@ -4,9 +4,11 @@ import * as dropService from "./service.js";
 import { zodSafeParse } from "../../shared/lib/zodSafeParse.js";
 import { createDropSchema, updateDropSchema } from "./schema.js";
 
-const getAll = async (_req: Request, res: Response) => {
-  const drops = await dropService.getAll();
-  res.json(drops);
+const getAll = async (req: Request, res: Response) => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 8;
+  const result = await dropService.getAll(page, limit);
+  res.json(result);
 };
 
 const getById = async (req: Request, res: Response) => {

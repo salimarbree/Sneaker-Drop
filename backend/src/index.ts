@@ -12,6 +12,8 @@ import uploadRoutes from "./modules/upload/routes.js";
 import { errorHandler } from "./shared/middlewares/errorHandler.js";
 import { setupSocketHandlers } from "./shared/socket/index.js";
 import { startStockRecovery } from "./services/stockRecovery.service.js";
+import fs from "fs";
+import path from "path";
 
 const app = express();
 const httpServer = createServer(app);
@@ -21,9 +23,14 @@ const io = new Server(httpServer, {
   transports: ["websocket", "polling"],
 });
 
+const UPLOADS_DIR = process.env.VERCEL ? "/tmp/uploads" : "uploads";
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
 app.use(cors());
 app.use(express.json());
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(UPLOADS_DIR));
 
 app.use((req, _res, next) => {
   req.io = io;

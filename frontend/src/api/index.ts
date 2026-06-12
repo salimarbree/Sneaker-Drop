@@ -4,9 +4,21 @@ import type {
   AuthResponse,
   ReservationResponse,
   PurchaseResponse,
+  PaginatedResponse,
 } from "../types";
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
+export const BACKEND_URL = BASE.replace(/\/api$/, "");
+
+export function getImageUrl(url: string | undefined): string {
+  if (!url) return "/placeholder-shoe.svg";
+  if (url.startsWith("http") || url.startsWith("data:")) return url;
+  // If it's a relative path from the backend (like /uploads/...)
+  // ensure it's absolute relative to the backend base
+  const cleanUrl = url.startsWith("/") ? url : `/${url}`;
+  return `${BACKEND_URL}${cleanUrl}`;
+}
+
 //update to use env variable for base URL
 class ApiError extends Error {
   constructor(message: string) {
@@ -61,7 +73,7 @@ async function request<T>(
 }
 
 export const api = {
-  getDrops: () => request<Drop[]>("GET", "/drops"),
+  getDrops: (page = 1, limit = 8) => request<PaginatedResponse<Drop>>("GET", `/drops?page=${page}&limit=${limit}`),
   getDrop: (id: string) => request<Drop>("GET", `/drops/${id}`),
   createDrop: (body: {
     name: string;

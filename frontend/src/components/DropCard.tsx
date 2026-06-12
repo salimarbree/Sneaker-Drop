@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { api } from "../api";
+import { api, getImageUrl } from "../api";
 import toast from "react-hot-toast";
 import type { Drop, StockUpdateEvent, PurchaseEvent, ReservationExpiredEvent } from "../types";
 
@@ -157,7 +157,7 @@ export default function DropCard({ drop, userId, onStockUpdate }: Props) {
       <div className="relative h-44 bg-gradient-to-br from-indigo-900 via-gray-900 to-slate-800 flex items-center justify-center overflow-hidden">
         {drop.imageUrl && drop.imageUrl !== "/placeholder-shoe.svg" ? (
           <img
-            src={drop.imageUrl}
+            src={getImageUrl(drop.imageUrl)}
             alt={drop.name}
             className="w-full h-full object-cover"
           />

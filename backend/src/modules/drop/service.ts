@@ -13,11 +13,27 @@ function includePurchases() {
   };
 }
 
-export const getAll = async () => {
-  return prisma.drop.findMany({
-    orderBy: { createdAt: "desc" },
-    include: includePurchases(),
-  });
+export const getAll = async (page = 1, limit = 10) => {
+  const skip = (page - 1) * limit;
+  const [data, total] = await Promise.all([
+    prisma.drop.findMany({
+      orderBy: { createdAt: "desc" },
+      include: includePurchases(),
+      skip,
+      take: limit,
+    }),
+    prisma.drop.count(),
+  ]);
+  
+  return {
+    data,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 };
 
 export const getById = async (id: string) => {
