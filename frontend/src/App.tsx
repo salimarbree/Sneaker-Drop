@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import { api } from "./api";
 import { useSocket } from "./hooks/useSocket";
@@ -29,6 +29,15 @@ function HomePage() {
   const [loading, setLoading] = useState(true);
   const { connected, on } = useSocket();
   const { user } = useAuth();
+
+  const fetchDrops = useCallback(async () => {
+    try {
+      const data = await api.getDrops();
+      setDrops(data);
+    } catch {
+      // silent
+    }
+  }, []);
 
   useEffect(() => {
     api.getDrops()
@@ -63,12 +72,15 @@ function HomePage() {
       setDrops((prev) => [data, ...prev]);
     });
 
+    const pollTimer = setInterval(fetchDrops, 3000);
+
     return () => {
       unsubStock();
       unsubPurchase();
       unsubDrop();
+      clearInterval(pollTimer);
     };
-  }, [on]);
+  }, [on, fetchDrops]);
 
   const handleStockUpdate = (_dropId: string, _stock: number) => {};
 

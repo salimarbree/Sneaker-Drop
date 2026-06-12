@@ -5,11 +5,31 @@ import type { CreateReservationInput } from "./schema.js";
 
 const RESERVATION_TTL_MS = 60_000;
 
+async function recoverExpiredForDrop(dropId: string, io: SocketIOServer) {
+  const expired = await prisma.reservation.findMany({
+    where: { dropId, status: "active", expiresAt: { lte: new Date() } },
+  });
+  for (const reservation of expired) {
+    await prisma.$transaction(async (tx) => {
+      const current = await tx.reservation.findUnique({ where: { id: reservation.id } });
+      if (!current || current.status !== "active") return;
+      await tx.reservation.update({ where: { id: reservation.id }, data: { status: "expired" } });
+      await tx.drop.update({ where: { id: dropId }, data: { availableStock: { increment: 1 } } });
+    });
+    const updatedDrop = await prisma.drop.findUnique({ where: { id: dropId } });
+    if (updatedDrop) {
+      io.emit("stock:updated", { dropId, availableStock: updatedDrop.availableStock, totalStock: updatedDrop.totalStock });
+    }
+  }
+}
+
 export const create = async (
   data: CreateReservationInput,
   io: SocketIOServer,
 ) => {
   const { userId, dropId } = data;
+
+  await recoverExpiredForDrop(dropId, io);
 
   const result = await prisma.$transaction(async (tx) => {
     const drop = await tx.drop.findUnique({ where: { id: dropId } });
