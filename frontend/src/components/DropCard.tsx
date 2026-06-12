@@ -155,13 +155,23 @@ export default function DropCard({ drop, userId, onStockUpdate }: Props) {
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md group">
       {/* Header image area */}
       <div className="relative h-44 bg-gradient-to-br from-indigo-900 via-gray-900 to-slate-800 flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white rounded-full blur-3xl" />
-          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-400 rounded-full blur-3xl" />
-        </div>
-        <div className="text-6xl transform group-hover:scale-110 transition-transform duration-300 select-none">
-          👟
-        </div>
+        {drop.imageUrl && drop.imageUrl !== "/placeholder-shoe.svg" ? (
+          <img
+            src={drop.imageUrl}
+            alt={drop.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <>
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-white rounded-full blur-3xl" />
+              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-400 rounded-full blur-3xl" />
+            </div>
+            <div className="text-6xl transform group-hover:scale-110 transition-transform duration-300 select-none">
+              👟
+            </div>
+          </>
+        )}
 
         {/* Stock badge */}
         <div className="absolute top-3 right-3">
