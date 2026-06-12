@@ -8,6 +8,7 @@ import dropRoutes from "./modules/drop/routes.js";
 import reservationRoutes from "./modules/reservation/routes.js";
 import purchaseRoutes from "./modules/purchase/routes.js";
 import userRoutes from "./modules/user/routes.js";
+import uploadRoutes from "./modules/upload/routes.js";
 import { errorHandler } from "./shared/middlewares/errorHandler.js";
 import { setupSocketHandlers } from "./shared/socket/index.js";
 import { startStockRecovery } from "./services/stockRecovery.service.js";
@@ -22,6 +23,7 @@ const io = new Server(httpServer, {
 
 app.use(cors());
 app.use(express.json());
+app.use("/uploads", express.static("uploads"));
 
 app.use((req, _res, next) => {
   req.io = io;
@@ -32,6 +34,7 @@ app.use("/api/drops", dropRoutes);
 app.use("/api/reservations", reservationRoutes);
 app.use("/api/purchases", purchaseRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/upload", uploadRoutes);
 
 app.use(errorHandler);
 

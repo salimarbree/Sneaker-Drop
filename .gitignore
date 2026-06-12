@@ -3,3 +3,5 @@ dist/
 pgdata/
 .env
 *.log
+uploads/*
+!uploads/.gitkeep

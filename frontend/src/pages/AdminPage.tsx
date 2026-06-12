@@ -31,6 +31,7 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const fetchDrops = useCallback(async () => {
     try {
@@ -188,13 +189,50 @@ export default function AdminPage() {
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Image URL</label>
-                    <input
-                      value={form.imageUrl}
-                      onChange={(e) => { setForm({ ...form, imageUrl: e.target.value }); setPreviewError(false); }}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/20"
-                      placeholder="https://..."
-                    />
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Image</label>
+                    <div className="flex gap-2">
+                      <input
+                        value={form.imageUrl}
+                        onChange={(e) => { setForm({ ...form, imageUrl: e.target.value }); setPreviewError(false); }}
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/20"
+                        placeholder="https://... or upload"
+                      />
+                      <label className={`shrink-0 px-4 py-2 text-sm font-semibold rounded-lg cursor-pointer transition-colors ${
+                        uploading ? "bg-gray-200 text-gray-400" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}>
+                        {uploading ? (
+                          <span className="flex items-center gap-1.5">
+                            <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
+                            Uploading
+                          </span>
+                        ) : "Upload"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={uploading}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            setUploading(true);
+                            try {
+                              const url = await api.uploadImage(file);
+                              setForm({ ...form, imageUrl: url });
+                              setPreviewError(false);
+                              toast.success("Image uploaded");
+                            } catch (err) {
+                              toast.error(err instanceof Error ? err.message : "Upload failed");
+                            } finally {
+                              setUploading(false);
+                              e.target.value = "";
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
                   </div>
                 </div>
 
