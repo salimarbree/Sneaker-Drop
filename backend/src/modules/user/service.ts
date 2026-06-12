@@ -1,6 +1,6 @@
 import { prisma } from "../../shared/lib/prisma.js";
 import { AppError } from "../../shared/lib/errors.js";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { signToken } from "../../shared/middlewares/auth.js";
 import { publicUserSelect } from "./schema.js";
 import type {
