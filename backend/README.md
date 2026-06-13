@@ -53,22 +53,24 @@ npm start          # production
 ```
 backend/
 ├── prisma/
-│   ├── schema.prisma       # Database schema
-│   └── seed.ts             # Seed script (5 users, 3 drops)
+│   ├── schema.prisma       # Database schema (User, Drop, Reservation, Purchase)
+│   └── seed.ts             # Seed script (6 users, 3 drops)
+├── uploads/                # Uploaded images
 ├── src/
-│   ├── index.ts            # App entry point
+│   ├── index.ts            # App entry point (Express + Socket.io + routes)
 │   ├── modules/
-│   │   ├── drop/           # Drop CRUD + listing with top purchasers
-│   │   ├── purchase/       # Purchase creation with reservation validation
-│   │   ├── reservation/    # Atomic reservation with 60s expiry
+│   │   ├── drop/           # Drop CRUD + paginated listing with top purchasers
+│   │   ├── purchase/       # Purchase completion with reservation validation
+│   │   ├── reservation/    # Atomic reservation with 60s TTL
+│   │   ├── upload/         # Image upload (multer, admin only)
 │   │   └── user/           # Register, login, profile update
 │   ├── services/
-│   │   └── stockRecovery.service.ts  # Polls & recovers expired reservations
+│   │   └── stockRecovery.service.ts  # 5s polling — recovers expired reservations
 │   └── shared/
-│       ├── lib/            # Prisma client, errors, logger
-│       ├── middlewares/    # validate, asyncHandler, errorHandler, auth
-│       ├── socket/         # Socket.io setup
-│       └── types/          # Express type augmentation
+│       ├── lib/            # Prisma client, AppError, zodSafeParse
+│       ├── middlewares/    # authenticate, optionalAuth, requireAdmin, asyncWrapper, errorHandler
+│       ├── socket/         # Socket.io connection handler
+│       └── types/          # Express Request augmentation
 ```
 
 ## API
@@ -87,9 +89,17 @@ backend/
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| GET | `/api/drops` | — | List drops with top 3 purchasers |
+| GET | `/api/drops` | — | List drops (paginated) with top 3 purchasers |
 | GET | `/api/drops/:id` | — | Get single drop |
-| POST | `/api/drops` | — | Create a drop |
+| POST | `/api/drops` | Admin | Create a drop |
+| PUT | `/api/drops/:id` | Admin | Update a drop (recalculates stock) |
+| DELETE | `/api/drops/:id` | Admin | Delete a drop |
+
+### Upload
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/api/upload` | Admin | Upload image (jpg/png/webp/gif/svg, max 5MB) |
 
 ### Reservations
 
@@ -105,12 +115,18 @@ backend/
 
 ## WebSocket events
 
-- `stock:updated` — emitted when stock changes
-- `purchase:new` — emitted when a purchase occurs
-- `drop:created` — emitted when a new drop is created
+| Event | Payload | Trigger |
+|---|---|---|
+| `stock:updated` | `{ dropId, availableStock, totalStock }` | Reservation, purchase, expiry recovery |
+| `purchase:new` | `{ dropId, username, createdAt }` | Successful purchase |
+| `drop:created` | Drop object | New drop created |
+| `drop:updated` | Drop object | Drop updated |
+| `drop:deleted` | `{ id }` | Drop deleted |
+| `reservation:expired` | `{ dropId, reservationId }` | Stock recovery service |
 
 ## Seed data
 
-- **Users:** sneakerhead42, dropsniper, heatseeker, resell_king, collector_jay
-- **Password:** `password123` (hashed with bcrypt)
-- **Drops:** 3 sneaker drops with varying stock levels
+- **Users (all passwords: `123456`):**
+  - `admin@example.com` — admin role
+  - `sneakerhead42@example.com`, `dropsniper@example.com`, `heatseeker@example.com`, `resell_king@example.com`, `collector_jay@example.com`
+- **Drops:** Air Jordan 1 (10 stock), Yeezy Boost 350 (5 stock), Nike Dunk Low (15 stock)
