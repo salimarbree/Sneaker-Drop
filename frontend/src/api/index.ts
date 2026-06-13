@@ -7,6 +7,7 @@ import type {
   PaginatedResponse,
 } from "../types";
 
+//api connect
 const BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
 export const BACKEND_URL = BASE.replace(/\/api$/, "");
 
@@ -73,7 +74,11 @@ async function request<T>(
 }
 
 export const api = {
-  getDrops: (page = 1, limit = 8) => request<PaginatedResponse<Drop>>("GET", `/drops?page=${page}&limit=${limit}`),
+  getDrops: (page = 1, limit = 8) =>
+    request<PaginatedResponse<Drop>>(
+      "GET",
+      `/drops?page=${page}&limit=${limit}`,
+    ),
   getDrop: (id: string) => request<Drop>("GET", `/drops/${id}`),
   createDrop: (body: {
     name: string;
@@ -81,13 +86,17 @@ export const api = {
     description?: string;
     imageUrl?: string;
   }) => request<Drop>("POST", "/drops", body),
-  updateDrop: (id: string, body: {
-    name?: string;
-    description?: string;
-    imageUrl?: string;
-    totalStock?: number;
-  }) => request<Drop>("PUT", `/drops/${id}`, body),
-  deleteDrop: (id: string) => request<{ ok: boolean }>("DELETE", `/drops/${id}`),
+  updateDrop: (
+    id: string,
+    body: {
+      name?: string;
+      description?: string;
+      imageUrl?: string;
+      totalStock?: number;
+    },
+  ) => request<Drop>("PUT", `/drops/${id}`, body),
+  deleteDrop: (id: string) =>
+    request<{ ok: boolean }>("DELETE", `/drops/${id}`),
   reserve: (userId: string, dropId: string) =>
     request<ReservationResponse>("POST", "/reservations", { userId, dropId }),
   purchase: (userId: string, dropId: string, reservationId: string) =>
